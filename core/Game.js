@@ -13,6 +13,8 @@ export class Game {
     this.snake = new Snake();
 
     this.isGameOver = false;
+    this.score = 0;              // poäng som ökar när vi äter mat
+
     this.food = new Food(this.cols, this.rows, this.tileSize, this.ctx);
     this.food.randomize(this.snake.segments);
 
@@ -67,16 +69,30 @@ export class Game {
       head.y < 0 ||
       head.y >= this.rows
     ) {
-      this.isGameOver = true;
+      this._setGameOver();   // samla all game-over-logik på ett ställe
     }
   }
 
   _checkFoodCollision() {
     const head = this.snake.segments[0];
     if (head.x === this.food.x && head.y === this.food.y) {
-      //låter Snake växa via sin egen metod
+      // ormen växer och vi ökar poängen
       this.snake.grow();
+      this.score += 1;
+
       this.food.randomize(this.snake.segments);
+    }
+  }
+
+  // anropas när spelet ska ta slut
+  _setGameOver() {
+    if (this.isGameOver) return;
+
+    this.isGameOver = true;
+
+    // låt main.js få veta slutpoängen
+    if (typeof this.onGameOver === "function") {
+      this.onGameOver(this.score);
     }
   }
 
@@ -84,5 +100,6 @@ export class Game {
     this.snake = new Snake();
     this.food.randomize(this.snake.segments);
     this.isGameOver = false;
+    this.score = 0;        // börja om med 0 poäng
   }
 }
