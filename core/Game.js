@@ -27,14 +27,10 @@ export class Game {
   update() {
     if (this.isGameOver) return;
 
-    // 1. flytta ormen
     this.snake.update();
-
-    // 2. krockar
     this._checkWallCollision();
     this._checkFoodCollision();
 
-    // 3. rita
     this.board.clear();
     this.board.drawGrid();
     this.food.draw();
@@ -42,7 +38,6 @@ export class Game {
   }
 
   _handleKeyDown(event) {
-    // reset efter game over
     if (this.isGameOver && event.key === "Enter") {
       this.reset();
       return;
@@ -79,11 +74,8 @@ export class Game {
   _checkFoodCollision() {
     const head = this.snake.segments[0];
     if (head.x === this.food.x && head.y === this.food.y) {
-      // förläng ormen
-      const tail = this.snake.segments[this.snake.segments.length - 1];
-      this.snake.segments.push({ x: tail.x, y: tail.y });
-
-      // ny mat
+      //låter Snake växa via sin egen metod
+      this.snake.grow();
       this.food.randomize(this.snake.segments);
     }
   }
@@ -94,5 +86,3 @@ export class Game {
     this.isGameOver = false;
   }
 }
-
-

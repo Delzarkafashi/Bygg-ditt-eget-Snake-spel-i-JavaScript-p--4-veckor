@@ -1,4 +1,3 @@
-// core/Snake.js
 export class Snake {
   constructor() {
     this.segments = [
@@ -7,24 +6,20 @@ export class Snake {
       { x: 8, y: 10 },
     ];
 
-    // starta åt höger
     this.direction = { x: 1, y: 0 };
     this.nextDirection = { x: 1, y: 0 };
   }
 
-  // ändra riktning (ingen 180°-vändning)
   setDirection(dx, dy) {
     const isOpposite =
       dx === -this.direction.x && dy === -this.direction.y;
 
-    if (isOpposite) return; // ignorera om du försöker vända bakåt
+    if (isOpposite) return;
 
     this.nextDirection = { x: dx, y: dy };
   }
 
-  // körs varje tick
   update() {
-    // lås in nästa riktning
     this.direction = this.nextDirection;
 
     const head = this.segments[0];
@@ -33,9 +28,7 @@ export class Snake {
       y: head.y + this.direction.y,
     };
 
-    // lägg till nytt huvud
     this.segments.unshift(newHead);
-    // ta bort svans
     this.segments.pop();
   }
 
@@ -49,5 +42,11 @@ export class Snake {
         tileSize
       );
     });
+  }
+
+  // Ny metod: Snake ansvarar själv för att växa
+  grow() {
+    const tail = this.segments[this.segments.length - 1];
+    this.segments.push({ x: tail.x, y: tail.y });
   }
 }
