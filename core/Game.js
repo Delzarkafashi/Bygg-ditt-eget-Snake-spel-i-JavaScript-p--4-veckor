@@ -13,6 +13,8 @@ export class Game {
     this.snake = new Snake();
 
     this.isGameOver = false;
+    this.score = 0;              // poäng som ökar när vi äter mat
+
     this.food = new Food(this.cols, this.rows, this.tileSize, this.ctx);
     this.food.randomize(this.snake.segments);
 
@@ -27,14 +29,10 @@ export class Game {
   update() {
     if (this.isGameOver) return;
 
-    // 1. flytta ormen
     this.snake.update();
-
-    // 2. krockar
     this._checkWallCollision();
     this._checkFoodCollision();
 
-    // 3. rita
     this.board.clear();
     this.board.drawGrid();
     this.food.draw();
@@ -42,7 +40,6 @@ export class Game {
   }
 
   _handleKeyDown(event) {
-    // reset efter game over
     if (this.isGameOver && event.key === "Enter") {
       this.reset();
       return;
@@ -72,19 +69,30 @@ export class Game {
       head.y < 0 ||
       head.y >= this.rows
     ) {
-      this.isGameOver = true;
+      this._setGameOver();   // samla all game-over-logik på ett ställe
     }
   }
 
   _checkFoodCollision() {
     const head = this.snake.segments[0];
     if (head.x === this.food.x && head.y === this.food.y) {
-      // förläng ormen
-      const tail = this.snake.segments[this.snake.segments.length - 1];
-      this.snake.segments.push({ x: tail.x, y: tail.y });
+      // ormen växer och vi ökar poängen
+      this.snake.grow();
+      this.score += 1;
 
-      // ny mat
       this.food.randomize(this.snake.segments);
+    }
+  }
+
+  // anropas när spelet ska ta slut
+  _setGameOver() {
+    if (this.isGameOver) return;
+
+    this.isGameOver = true;
+
+    // låt main.js få veta slutpoängen
+    if (typeof this.onGameOver === "function") {
+      this.onGameOver(this.score);
     }
   }
 
@@ -92,7 +100,6 @@ export class Game {
     this.snake = new Snake();
     this.food.randomize(this.snake.segments);
     this.isGameOver = false;
+    this.score = 0;        // börja om med 0 poäng
   }
 }
-
-
