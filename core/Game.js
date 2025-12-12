@@ -6,7 +6,7 @@ export class Game {
   constructor(ctx) {
     this.ctx = ctx;
     this.tileSize = 20;
-    this.cols = 20;
+    this.cols = 30;
     this.rows = 20;
 
     this.board = new Board(this.cols, this.rows, this.tileSize, this.ctx);
@@ -104,10 +104,11 @@ export class Game {
 
 
   _handleKeyDown(event) {
-    if (this.isGameOver && event.key === "Enter") {
-      this.reset();
-      return;
-    }
+    // TA BORT detta block om du inte vill att Enter ska starta om
+    // if (this.isGameOver && event.key === "Enter") {
+    //   this.reset();
+    //   return;
+    //}
 
     // spelare 1: piltangenter
     switch (event.key) {

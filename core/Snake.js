@@ -35,16 +35,30 @@ export class Snake {
   }
 
   draw(ctx, tileSize) {
-    ctx.fillStyle = this.color; // använd ormens färg
-    this.segments.forEach(seg => {
-      ctx.fillRect(
-        seg.x * tileSize,
-        seg.y * tileSize,
-        tileSize,
-        tileSize
-      );
+    ctx.fillStyle = this.color;
+
+     // kropp: lite mindre rutor för "pixel-look"
+    const bodyPad = 4;
+    const bodySize = tileSize - bodyPad;
+
+    // huvud: mindre padding än kroppen -> därför blir huvudet större
+    const headPad = 2;             
+    const headSize = tileSize - headPad; 
+
+    this.segments.forEach((seg, index) => {
+        // första segmentet är huvudet
+        const pad = index === 0 ? headPad : bodyPad;     
+        const size = index === 0 ? headSize : bodySize;  
+
+        ctx.fillRect(
+        seg.x * tileSize + pad / 2,
+        seg.y * tileSize + pad / 2,
+        size,
+        size
+        );
     });
   }
+
 
   grow() {
     const tail = this.segments[this.segments.length - 1];

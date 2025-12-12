@@ -5,20 +5,51 @@
   <title>Snake test</title>
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <link rel="stylesheet" href="style.css">
-
 </head>
 <body>
-  <h1>Snake test</h1>
 
-  <canvas id="game" width="400" height="400"></canvas>
+  <div id="start-screen">
+    <h1>Snake test</h1>
 
-  <h2>Scoreboard</h2>
+    <label>
+      Spelare:
+      <select id="player-select">
+        <option value="1">1 spelare</option>
+        <option value="2">2 spelare</option>
+      </select>
+    </label>
+
+    <button id="start-btn">Starta spel</button>
+  </div>
+
+  <div id="game-screen" style="display:none;">
+    <canvas id="game" width="600" height="400"></canvas>
     <p id="result-text"></p>
-    <h2>Scoreboard</h2>
+    <p id="live-score"></p>
     <ul id="scoreboard-list"></ul>
+    <div id="gameover-screen" style="display:none;">
+        <div class="gameover-modal">
+            <h2>Game Over</h2>
+            <p id="gameover-result"></p>
+            <button id="restart-btn">Spela igen</button>
+            <button id="menu-btn" type="button">Till startmeny</button>
+        </div>
+    </div>
+    <div id="name-modal" style="display:none;">
+        <div class="name-modal-box">
+            <h2>Spara score</h2>
+            <input id="name-input" type="text" placeholder="Ditt namn..." maxlength="12" />
+            <div class="name-actions">
+            <button id="name-save-btn" type="button">Spara</button>
+            <button id="name-cancel-btn" type="button">Avbryt</button>
+            </div>
+        </div>
+    </div>
 
+
+
+  </div>
 
   <script type="module" src="main.js"></script>
 </body>
-
 </html>
