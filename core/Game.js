@@ -6,7 +6,7 @@ export class Game {
   constructor(ctx) {
     this.ctx = ctx;
     this.tileSize = 20;
-    this.cols = 20;
+    this.cols = 30;
     this.rows = 20;
 
     this.board = new Board(this.cols, this.rows, this.tileSize, this.ctx);

@@ -24,13 +24,17 @@ export class Food {
     }
   }
 
-  draw() {
-    this.ctx.fillStyle = "red";
+    draw() {
+    this.ctx.fillStyle = "white"; // NYTT
+
+    const pad = 6; // NYTT
+    const size = this.tileSize - pad;
+
     this.ctx.fillRect(
-      this.x * this.tileSize,
-      this.y * this.tileSize,
-      this.tileSize,
-      this.tileSize
+        this.x * this.tileSize + pad / 2,
+        this.y * this.tileSize + pad / 2,
+        size,
+        size
     );
-  }
+    }
 }

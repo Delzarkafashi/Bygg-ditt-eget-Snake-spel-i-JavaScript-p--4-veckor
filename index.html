@@ -8,14 +8,33 @@
 
 </head>
 <body>
-  <h1>Snake test</h1>
 
-  <canvas id="game" width="400" height="400"></canvas>
+    <div id="start-screen">
+        <h1>Snake test</h1>
 
-  <h2>Scoreboard</h2>
-    <p id="result-text"></p>
-    <h2>Scoreboard</h2>
+        <label>
+            Spelare:
+            <select id="player-select">
+            <option value="1">1 spelare</option>
+            <option value="2">2 spelare</option>
+            </select>
+        </label>
+
+        <button id="start-btn">Starta spel</button>
+    </div>
+
+
+    <div id="game-screen" style="display:none;">
+        <canvas id="game" width="600" height="400"></canvas>
+
+    <div class="center">
+
+
+    <div id="game-screen" style="display:none;"> ... </div>
+    </div>
     <ul id="scoreboard-list"></ul>
+
+    </div>
 
 
   <script type="module" src="main.js"></script>
