@@ -1,5 +1,5 @@
 export class Snake {
-  constructor() {
+  constructor(color = "black") { // lägga till color
     this.segments = [
       { x: 10, y: 10 },
       { x: 9, y: 10 },
@@ -8,6 +8,8 @@ export class Snake {
 
     this.direction = { x: 1, y: 0 };
     this.nextDirection = { x: 1, y: 0 };
+
+    this.color = color; // spara färg för ormen
   }
 
   setDirection(dx, dy) {
@@ -33,7 +35,7 @@ export class Snake {
   }
 
   draw(ctx, tileSize) {
-    ctx.fillStyle = "black";
+    ctx.fillStyle = this.color; // använd ormens färg
     this.segments.forEach(seg => {
       ctx.fillRect(
         seg.x * tileSize,
@@ -44,9 +46,13 @@ export class Snake {
     });
   }
 
-  // Ny metod: Snake ansvarar själv för att växa
   grow() {
     const tail = this.segments[this.segments.length - 1];
     this.segments.push({ x: tail.x, y: tail.y });
+  }
+
+  hasSelfCollision() {
+    const [head, ...body] = this.segments;
+    return body.some(seg => seg.x === head.x && seg.y === head.y);
   }
 }
