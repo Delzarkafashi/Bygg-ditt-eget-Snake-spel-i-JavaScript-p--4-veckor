@@ -145,13 +145,13 @@ button:active{ transform: translateY(1px); }
 }
 #gameover-screen{
   align-items: start;     /* flyttar innehållet uppåt i overlayn */
-  padding-top: 100px;      /* justera värdet tills det känns rätt */
+  padding-top: 65px;      /* justera värdet tills det känns rätt */
 }
 
 
 .gameover-modal{
   width: min(520px, 90%);
-  height: 200px;
+  height: 250px;
 
   display: flex;
   flex-direction: column;
@@ -180,4 +180,53 @@ button:active{ transform: translateY(1px); }
 
 .gameover-modal button{
   width: 40%;
+}
+#controls-text{
+  margin: 8px 0 4px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+#live-score{
+  margin: 0 0 12px;
+  font-weight: 800;
+  font-size: 16px;
+}
+#name-modal{
+  position: fixed;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: rgba(0,0,0,0.6);
+}
+
+.name-modal-box{
+  width: min(420px, 92%);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+
+.name-modal-box input{
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.25);
+  color: rgba(255,255,255,0.92);
+  outline: none;
+}
+
+.name-actions{
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.name-actions button{
+  width: 100%;
 }

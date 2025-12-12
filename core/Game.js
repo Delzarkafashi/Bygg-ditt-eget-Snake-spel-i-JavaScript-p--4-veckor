@@ -104,10 +104,11 @@ export class Game {
 
 
   _handleKeyDown(event) {
-    if (this.isGameOver && event.key === "Enter") {
-      this.reset();
-      return;
-    }
+    // TA BORT detta block om du inte vill att Enter ska starta om
+    // if (this.isGameOver && event.key === "Enter") {
+    //   this.reset();
+    //   return;
+    //}
 
     // spelare 1: piltangenter
     switch (event.key) {
