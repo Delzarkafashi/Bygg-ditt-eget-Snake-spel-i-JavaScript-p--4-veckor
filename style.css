@@ -123,3 +123,61 @@ button:active{ transform: translateY(1px); }
   border: 1px solid var(--border);
   background: rgba(0,0,0,0.22);
 }
+#game-screen{
+  position: relative;
+}
+
+#game-screen{
+  position: relative;
+}
+
+#gameover-screen{
+  position: absolute;
+  inset: 0;
+  display: none;                 /* visas via JS */
+  place-items: center;
+  background: rgba(0,0,0,0.55);  /* mörkar spelet bakom */
+  border-radius: 16px;
+}
+
+#gameover-screen.show{
+  display: grid;
+}
+#gameover-screen{
+  align-items: start;     /* flyttar innehållet uppåt i overlayn */
+  padding-top: 100px;      /* justera värdet tills det känns rätt */
+}
+
+
+.gameover-modal{
+  width: min(520px, 90%);
+  height: 200px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;    
+  gap: 12px;
+
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+}
+
+
+.gameover-modal h2{
+  margin: 0 0 10px;
+}
+
+.gameover-modal p{
+  margin: 0 0 14px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.gameover-modal button{
+  width: 40%;
+}

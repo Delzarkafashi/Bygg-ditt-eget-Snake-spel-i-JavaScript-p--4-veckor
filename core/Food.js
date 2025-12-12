@@ -25,9 +25,9 @@ export class Food {
   }
 
     draw() {
-    this.ctx.fillStyle = "white"; // NYTT
+    this.ctx.fillStyle = "white"; 
 
-    const pad = 6; // NYTT
+    const pad = 6; 
     const size = this.tileSize - pad;
 
     this.ctx.fillRect(
