@@ -28,15 +28,14 @@ export class MultiplayerApi {
         return;
       }
 
-      // (debug) se exakt vad servern skickar
-      console.log("[WS IN]", msg); // <-- NYTT: hjälper oss se serverns format
+      // L10: stöd för olika server-format (event/type/action)
+      const ev = msg.event || msg.type || msg.action;
 
       if (msg.session) this.session = msg.session;
       if (msg.clientId) this.clientId = msg.clientId;
 
       if (this._handler) {
-        const ev = msg.event || msg.type || msg.action; // NYTT: stöd för olika server-format
-        this._handler(ev, msg.messageId, msg.clientId, msg.data);
+        this._handler(ev, msg.messageId, msg.clientId, msg.data, msg.session);
       }
     });
   }
@@ -51,24 +50,25 @@ export class MultiplayerApi {
   async host() {
     await this.connect();
 
-    // NYTT: skicka flera namn (vissa servrar vill ha type istället för action)
+    // L10: skicka både action och type för kompatibilitet
     this.ws.send(JSON.stringify({ action: "host", type: "host" }));
 
-    // NYTT: vänta på "session + clientId" istället för event-namnet "hosted"
+    // L10: vänta på att session+clientId kommer (inte bara ett event-namn)
     await this._waitFor((m) => m.session && m.clientId);
 
     return { session: this.session, clientId: this.clientId };
   }
 
-async join(session) {
-  await this.connect();
-  const clean = String(session).trim().toUpperCase(); // ändring: trim + uppercase
-  this.ws.send(JSON.stringify({ action: "join", session: clean }));
+  async join(session) {
+    await this.connect();
 
-  await this._waitFor((m) => (m.event || m.type || m.action) === "joined");
-  return { session: this.session, clientId: this.clientId };
-}
+    // L10: trim + uppercase så join inte failar pga mellanslag
+    const clean = String(session).trim().toUpperCase();
+    this.ws.send(JSON.stringify({ action: "join", type: "join", session: clean }));
 
+    await this._waitFor((m) => (m.event || m.type || m.action) === "joined" || (m.session && m.clientId));
+    return { session: this.session, clientId: this.clientId };
+  }
 
   game(data) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
@@ -76,7 +76,7 @@ async join(session) {
     this.ws.send(
       JSON.stringify({
         action: "game",
-        type: "game", // NYTT: extra kompatibilitet
+        type: "game",
         session: this.session,
         messageId: this._nextMessageId++,
         data,

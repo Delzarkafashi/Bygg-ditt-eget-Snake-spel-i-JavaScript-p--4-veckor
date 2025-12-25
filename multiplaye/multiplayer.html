@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Snake Multiplayer</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+  <!--Lobby-screen (Host/Join) -->
+  <div id="lobby-screen">
+    <h1>Snake Multiplayer</h1>
+
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <button id="host-btn" type="button">Hosta game</button>
+
+      <input id="session-input" placeholder="Kod (t.ex. X1GZ7)" maxlength="8" />
+
+      <button id="join-btn" type="button">Joina game</button>
+    </div>
+
+    <p id="status-text">Välj “Hosta” eller “Joina”.</p>
+
+    <div id="host-code" style="display:none;">
+      <b>Din kod:</b> <span id="code-text"></span>
+      <p>Väntar på att någon joinar…</p>
+    </div>
+
+    <button id="start-match-btn" type="button" disabled>
+      Starta match
+    </button>
+
+    <p style="margin-top:16px;">
+      <a href="../index.html">← Tillbaka</a>
+    </p>
+  </div>
+
+  <!--- Game-screen (visas när matchen startar) -->
+  <div id="mp-game-screen" style="display:none;">
+    <h2>Match pågår</h2>
+    <canvas id="game" width="600" height="400"></canvas>
+
+    <p id="mp-hint"></p>
+
+    <button id="leave-btn" type="button">Lämna match</button>
+  </div>
+
+  <script type="module" src="./multiplayer.js"></script>
+</body>
+</html>

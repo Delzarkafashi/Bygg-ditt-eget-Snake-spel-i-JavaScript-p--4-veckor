@@ -1,8 +1,59 @@
-// backend/server.js
+import http from "http";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import { WebSocketServer } from "ws";
 
-const wss = new WebSocketServer({ port: 8080 });
-console.log("WS server running on ws://localhost:8080");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Render sätter PORT automatiskt. Lokalt kör vi 8080.
+const PORT = process.env.PORT || 8080;
+
+// ====== Enkel static server (frontend) ======
+const rootDir = path.resolve(__dirname, ".."); // projektroten (där index.html ligger)
+
+function getContentType(filePath) {
+  if (filePath.endsWith(".html")) return "text/html; charset=utf-8";
+  if (filePath.endsWith(".js")) return "text/javascript; charset=utf-8";
+  if (filePath.endsWith(".css")) return "text/css; charset=utf-8";
+  if (filePath.endsWith(".png")) return "image/png";
+  if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) return "image/jpeg";
+  if (filePath.endsWith(".svg")) return "image/svg+xml";
+  return "application/octet-stream";
+}
+
+const server = http.createServer((req, res) => {
+  try {
+    const urlPath = (req.url || "/").split("?")[0];
+
+    // Default till index.html
+    const requested = urlPath === "/" ? "/index.html" : urlPath;
+
+    // Skydda mot ".."
+    const filePath = path.join(rootDir, requested);
+    if (!filePath.startsWith(rootDir)) {
+      res.writeHead(403);
+      return res.end("Forbidden");
+    }
+
+    if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+      res.writeHead(404);
+      return res.end("Not found");
+    }
+
+    const data = fs.readFileSync(filePath);
+    res.writeHead(200, { "Content-Type": getContentType(filePath) });
+    res.end(data);
+  } catch (e) {
+    res.writeHead(500);
+    res.end("Server error");
+  }
+});
+
+// ====== WebSocket på samma port ======
+const wss = new WebSocketServer({ server });
+console.log(`HTTP+WS server on http://0.0.0.0:${PORT}`);
 
 // sessionId -> { clients: Map(clientId -> ws) }
 const sessions = new Map();
@@ -25,13 +76,10 @@ wss.on("connection", (ws) => {
     let msg;
     try { msg = JSON.parse(raw.toString()); } catch { return; }
 
-    // ---- HOST ----
     if (msg.action === "host") {
       const sessionId = makeSessionId();
-
       sessions.set(sessionId, { clients: new Map() });
       sessions.get(sessionId).clients.set(ws.clientId, ws);
-
       ws.session = sessionId;
 
       send(ws, { type: "hosted", session: sessionId, clientId: ws.clientId });
@@ -39,7 +87,6 @@ wss.on("connection", (ws) => {
       return;
     }
 
-    // ---- JOIN ----
     if (msg.action === "join") {
       const sessionId = String(msg.session || "").trim().toUpperCase();
 
@@ -51,11 +98,18 @@ wss.on("connection", (ws) => {
       sessions.get(sessionId).clients.set(ws.clientId, ws);
       ws.session = sessionId;
 
+      // Skicka joined till den som joinar
       send(ws, { type: "joined", session: sessionId, clientId: ws.clientId });
+
+      // (viktigt) informera även hosten att någon joinade
+      for (const [id, clientWs] of sessions.get(sessionId).clients.entries()) {
+        if (clientWs.readyState !== 1) continue;
+        if (id === ws.clientId) continue;
+        send(clientWs, { type: "joined", session: sessionId, clientId: ws.clientId });
+      }
       return;
     }
 
-    // ---- GAME (broadcast till andra i samma session) ----
     if (msg.action === "game") {
       const sessionId = ws.session;
       if (!sessionId || !sessions.has(sessionId)) return;
@@ -83,7 +137,8 @@ wss.on("connection", (ws) => {
 
     const room = sessions.get(sessionId).clients;
     room.delete(ws.clientId);
-
     if (room.size === 0) sessions.delete(sessionId);
   });
 });
+
+server.listen(PORT, "0.0.0.0");

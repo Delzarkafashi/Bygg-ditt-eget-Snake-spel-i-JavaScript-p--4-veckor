@@ -12,51 +12,61 @@ export class Game {
     this.board = new Board(this.cols, this.rows, this.tileSize, this.ctx);
 
     this.isGameOver = false;
+    this.lastResult = null;
 
-    this.playerCount = 1;   // antal spelare (1 eller 2)
-    this.snakes = [];       // lista av ormar (en per spelare)
-    this.scores = [];       // poäng per spelare
+    this.playerCount = 1;
+    this.snakes = [];
+    this.scores = [];
 
-    this.loser = null;      // vem som dog (0 eller 1)
+    this.loser = null;
 
     this.food = new Food(this.cols, this.rows, this.tileSize, this.ctx);
 
     this._handleKeyDown = this._handleKeyDown.bind(this);
+    this.loopId = null;
 
-    this.setPlayers(1);     // startar som 1 spelare (kan ändras till 2)
+    // Multiplayer
+    this.netMode = "local"; // "local" | "host" | "client"
+    this.onState = null;
+    this.onGameOver = null;
+
+    this.setPlayers(1);
+  }
+
+  setNetMode(mode) {
+    this.netMode = mode;
   }
 
   setPlayers(count) {
     this.playerCount = count;
 
     if (count === 2) {
-      this.snakes = [
-        new Snake("black"),
-        new Snake("blue"),
-      ];
+      this.snakes = [new Snake("black"), new Snake("blue")];
 
-        // spelare 1: längst ner till vänster
-        this.snakes[0].segments = [
+      this.snakes[0].segments = [
         { x: 2, y: this.rows - 3 },
         { x: 1, y: this.rows - 3 },
         { x: 0, y: this.rows - 3 },
-        ];
-        this.snakes[0].direction = { x: 1, y: 0 };
-        this.snakes[0].nextDirection = { x: 1, y: 0 };
+      ];
+      this.snakes[0].direction = { x: 1, y: 0 };
+      this.snakes[0].nextDirection = { x: 1, y: 0 };
 
-        // spelare 2: högst upp till höger
-        this.snakes[1].segments = [
+      this.snakes[1].segments = [
         { x: this.cols - 3, y: 2 },
         { x: this.cols - 2, y: 2 },
         { x: this.cols - 1, y: 2 },
-        ];
-        this.snakes[1].direction = { x: -1, y: 0 };
-        this.snakes[1].nextDirection = { x: -1, y: 0 };
+      ];
+      this.snakes[1].direction = { x: -1, y: 0 };
+      this.snakes[1].nextDirection = { x: -1, y: 0 };
 
       this.scores = [0, 0];
     } else {
       this.snakes = [new Snake("black")];
-      this.snakes[0].segments = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
+      this.snakes[0].segments = [
+        { x: 10, y: 10 },
+        { x: 9, y: 10 },
+        { x: 8, y: 10 },
+      ];
       this.snakes[0].direction = { x: 1, y: 0 };
       this.snakes[0].nextDirection = { x: 1, y: 0 };
 
@@ -64,21 +74,38 @@ export class Game {
     }
 
     this.isGameOver = false;
-    this.loser = null;      // nollställ vem som dog
+    this.lastResult = null;
+    this.loser = null;
 
     this.food.randomize(this._allSegments());
   }
 
   start() {
-    window.addEventListener("keydown", this._handleKeyDown);
-    this.loopId = setInterval(() => this.update(), 150);
+    this.stop();
+
+    if (this.netMode !== "client") {
+      window.addEventListener("keydown", this._handleKeyDown);
+    }
+
+    this.loopId = setInterval(() => this.update(), 500);
   }
 
-    update() {
+  stop() {
+    if (this.loopId) clearInterval(this.loopId);
+    this.loopId = null;
+    window.removeEventListener("keydown", this._handleKeyDown);
+  }
+
+  update() {
     if (this.isGameOver) return;
 
+    if (this.netMode === "client") {
+      this._draw();
+      return;
+    }
+
     for (let i = 0; i < this.snakes.length; i++) {
-        this.snakes[i].update();
+      this.snakes[i].update();
     }
 
     this._checkWallCollision();
@@ -93,40 +120,31 @@ export class Game {
     this._checkSnakeCollision();
     if (this.isGameOver) return;
 
+    this._draw();
+
+    if (this.netMode === "host" && typeof this.onState === "function") {
+      this.onState(this.getState());
+    }
+  }
+
+  _draw() {
     this.board.clear();
     this.board.drawGrid();
     this.food.draw();
 
-    for (let i = 0; i < this.snakes.length; i++) {
-        this.snakes[i].draw(this.ctx, this.tileSize);
+    for (let snake of this.snakes) {
+      snake.draw(this.ctx, this.tileSize);
     }
-    }
-
+  }
 
   _handleKeyDown(event) {
-    // TA BORT detta block om du inte vill att Enter ska starta om
-    // if (this.isGameOver && event.key === "Enter") {
-    //   this.reset();
-    //   return;
-    //}
-
-    // spelare 1: piltangenter
     switch (event.key) {
-      case "ArrowUp":
-        this.snakes[0].setDirection(0, -1);
-        break;
-      case "ArrowDown":
-        this.snakes[0].setDirection(0, 1);
-        break;
-      case "ArrowLeft":
-        this.snakes[0].setDirection(-1, 0);
-        break;
-      case "ArrowRight":
-        this.snakes[0].setDirection(1, 0);
-        break;
+      case "ArrowUp": this.snakes[0].setDirection(0, -1); break;
+      case "ArrowDown": this.snakes[0].setDirection(0, 1); break;
+      case "ArrowLeft": this.snakes[0].setDirection(-1, 0); break;
+      case "ArrowRight": this.snakes[0].setDirection(1, 0); break;
     }
 
-    // spelare 2: WASD
     if (this.playerCount === 2) {
       if (event.key === "w" || event.key === "W") this.snakes[1].setDirection(0, -1);
       if (event.key === "s" || event.key === "S") this.snakes[1].setDirection(0, 1);
@@ -137,15 +155,9 @@ export class Game {
 
   _checkWallCollision() {
     for (let i = 0; i < this.snakes.length; i++) {
-      const head = this.snakes[i].segments[0];
-      if (
-        head.x < 0 ||
-        head.x >= this.cols ||
-        head.y < 0 ||
-        head.y >= this.rows
-      ) {
-        this._setGameOver(i); // den som går in i väggen förlorar
-        
+      const h = this.snakes[i].segments[0];
+      if (h.x < 0 || h.x >= this.cols || h.y < 0 || h.y >= this.rows) {
+        this._setGameOver(i);
         return;
       }
     }
@@ -153,13 +165,11 @@ export class Game {
 
   _checkFoodCollision() {
     for (let i = 0; i < this.snakes.length; i++) {
-      const head = this.snakes[i].segments[0];
-      if (head.x === this.food.x && head.y === this.food.y) {
+      const h = this.snakes[i].segments[0];
+      if (h.x === this.food.x && h.y === this.food.y) {
         this.snakes[i].grow();
-        this.scores[i] += 1;
-
+        this.scores[i]++;
         this.food.randomize(this._allSegments());
-        return;
       }
     }
   }
@@ -167,7 +177,7 @@ export class Game {
   _checkSelfCollision() {
     for (let i = 0; i < this.snakes.length; i++) {
       if (this.snakes[i].hasSelfCollision()) {
-        this._setGameOver(i); // den som kör in i sig själv förlorar
+        this._setGameOver(i);
         return;
       }
     }
@@ -176,26 +186,24 @@ export class Game {
   _checkSnakeCollision() {
     if (this.playerCount !== 2) return;
 
-    const head0 = this.snakes[0].segments[0];
-    const head1 = this.snakes[1].segments[0];
+    const h0 = this.snakes[0].segments[0];
+    const h1 = this.snakes[1].segments[0];
 
-    if (head0.x === head1.x && head0.y === head1.y) {
-      this._setGameOver(null); // huvud mot huvud samtidigt -> oavgjort
+    if (h0.x === h1.x && h0.y === h1.y) {
+      this._setGameOver(null);
       return;
     }
 
-    for (let i = 0; i < this.snakes[1].segments.length; i++) {
-      const seg = this.snakes[1].segments[i];
-      if (seg.x === head0.x && seg.y === head0.y) {
-        this._setGameOver(0); // spelare 1 körde in i spelare 2
+    for (let seg of this.snakes[1].segments) {
+      if (seg.x === h0.x && seg.y === h0.y) {
+        this._setGameOver(0);
         return;
       }
     }
 
-    for (let i = 0; i < this.snakes[0].segments.length; i++) {
-      const seg = this.snakes[0].segments[i];
-      if (seg.x === head1.x && seg.y === head1.y) {
-        this._setGameOver(1); // spelare 2 körde in i spelare 1
+    for (let seg of this.snakes[0].segments) {
+      if (seg.x === h1.x && seg.y === h1.y) {
+        this._setGameOver(1);
         return;
       }
     }
@@ -203,22 +211,21 @@ export class Game {
 
   _setGameOver(loserIndex = null) {
     if (this.isGameOver) return;
+
     this.isGameOver = true;
-
     this.loser = loserIndex;
+    this.lastResult = this._getResult();
 
-    const result = this._getResult();
-
-        // loggar vem som dog + vinnare
-    console.log("GAME OVER", "loserIndex:", loserIndex, "winner:", result.winner); 
-
-    this.lastResult = result; // behövs innan main.js läser winner
+    this.stop();
 
     if (typeof this.onGameOver === "function") {
-        this.onGameOver(result.bestScore, result.winner); // skickar winner till main.js
+      this.onGameOver(this.lastResult.bestScore, this.lastResult.winner);
+    }
+
+    if (this.netMode === "host" && typeof this.onState === "function") {
+      this.onState(this.getState());
     }
   }
-
 
   _getResult() {
     if (this.playerCount === 1) {
@@ -226,35 +233,69 @@ export class Game {
     }
 
     if (this.loser !== null) {
-      const winner = this.loser === 0 ? 2 : 1;
-      return { winner, bestScore: Math.max(this.scores[0], this.scores[1]) };
+      return {
+        winner: this.loser === 0 ? 2 : 1,
+        bestScore: Math.max(...this.scores),
+      };
     }
 
-    const s0 = this.scores[0];
-    const s1 = this.scores[1];
+    const [s0, s1] = this.scores;
     const l0 = this.snakes[0].segments.length;
     const l1 = this.snakes[1].segments.length;
 
-    if (s0 > s1) return { winner: 1, bestScore: s0 };
-    if (s1 > s0) return { winner: 2, bestScore: s1 };
-
-    if (l0 > l1) return { winner: 1, bestScore: s0 };
-    if (l1 > l0) return { winner: 2, bestScore: s1 };
+    if (s0 !== s1) return { winner: s0 > s1 ? 1 : 2, bestScore: Math.max(s0, s1) };
+    if (l0 !== l1) return { winner: l0 > l1 ? 1 : 2, bestScore: s0 };
 
     return { winner: 0, bestScore: s0 };
   }
 
   _allSegments() {
-    const all = [];
-    for (let i = 0; i < this.snakes.length; i++) {
-      for (let j = 0; j < this.snakes[i].segments.length; j++) {
-        all.push(this.snakes[i].segments[j]);
-      }
-    }
-    return all;
+    return this.snakes.flatMap(s => s.segments);
   }
 
-  reset() {
-    this.setPlayers(this.playerCount); // resetar samma läge (1 eller 2 spelare)
+  getState() {
+    return {
+      playerCount: this.playerCount,
+      isGameOver: this.isGameOver,
+      result: this.lastResult,
+      scores: [...this.scores],
+      food: { x: this.food.x, y: this.food.y },
+      snakes: this.snakes.map(s => ({
+        color: s.color,
+        direction: { ...s.direction },
+        nextDirection: { ...s.nextDirection },
+        segments: s.segments.map(seg => ({ ...seg })),
+      })),
+    };
+  }
+
+  applyState(state) {
+    if (!state) return;
+
+    this.playerCount = state.playerCount;
+    this.isGameOver = state.isGameOver;
+    this.lastResult = state.result;
+
+    this.scores = [...state.scores];
+
+    this.food.x = state.food.x;
+    this.food.y = state.food.y;
+
+    if (this.snakes.length !== state.snakes.length) {
+      this.snakes = state.snakes.map(s => new Snake(s.color));
+    }
+
+    state.snakes.forEach((s, i) => {
+      this.snakes[i].direction = s.direction;
+      this.snakes[i].nextDirection = s.nextDirection;
+      this.snakes[i].segments = s.segments;
+    });
+
+    this._draw();
+  }
+
+  setPlayerDirection(index, dx, dy) {
+    const snake = this.snakes[index];
+    if (snake) snake.setDirection(dx, dy);
   }
 }
